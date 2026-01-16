@@ -7,6 +7,7 @@ import os
 
 app = FastAPI()
 
+
 class User(BaseModel):
     login: str
     email: str
@@ -55,3 +56,4 @@ def auth_user(params: AuthUser):
                     return AuthResponse(login=data["login"], token=data["token"])
 
     return AuthResponse(login="", token="")
+
