@@ -7,6 +7,7 @@ import json
 API_URL = "http://localhost:8000"
 
 current_token = None
+session_token = None
 
 def handle_error(response):
     print(f"\nОшибка (код {response.status_code}):")
@@ -38,6 +39,12 @@ def is_password_strong(password: str) -> bool:
         return False
     return True
 
+# Создание сессионного токена на основе технического по заданию
+def create_session_token(token):
+    timestamp = str(int(time.time()))
+    session_hash = hashlib.sha256(f"{token}:{timestamp}".encode()).hexdigest()
+    return f"session_{session_hash}"
+
 # Вариант 1: только токен
 def signature_variant_1(token):
     return {"Authorization": token}
@@ -57,16 +64,28 @@ def signature_variant_3(token, request_body=None):
     signature_hash = hashlib.sha256(f"{token}{sorted_body}".encode()).hexdigest()
     return {"Authorization": f"{signature_hash}"}
 
-def make_request_with_retry(user_id, params):
-    global current_token
+# Вариант 4: хэш от токена,тела запроса и время
+def signature_variant_4(token, request_body=None):
+    if request_body is None:
+        request_body = {}
+    
+    current_time = str(int(time.time()))
+    sorted_body = json.dumps(request_body, sort_keys=True) if request_body else ""
+    
+    signature_hash = hashlib.sha256(f"{token}{sorted_body}{current_time}".encode()).hexdigest()
+    return {"Authorization": f"{signature_hash}:{current_time}"}
 
-    headers = signature_variant_3(current_token, params)
+
+def make_request(user_id, params):
+    global session_token
+    
+    headers = signature_variant_4(session_token, params)
     response = requests.get(f"{API_URL}/users/{user_id}", params=params, headers=headers)
    
     return response 
 
 def register():
-    global current_token
+    global current_token, session_token
     print("\n=== Регистрация ===")
     login = input("Логин: ")
     email = input("Email: ")
@@ -92,15 +111,17 @@ def register():
 
     if response.status_code == 200:
         data = response.json()
-        current_token = data["token"]
+        current_token = data["token"]  
+        session_token = create_session_token(current_token) 
         print("Регистрация успешна.")
-        print("Токен:", current_token)
+        print(f"Технический токен: {current_token[:20]}...")
+        print(f"Сессионный токен: {session_token[:30]}...")
     else:
         handle_error(response)
 
 
 def auth():
-    global current_token
+    global current_token, session_token
     print("\n=== Авторизация ===")
     login = input("Логин: ")
     password = input("Пароль: ")
@@ -118,21 +139,21 @@ def auth():
 
     if response.status_code == 200:
         data = response.json()
-        current_token = data["token"]
-        print("Авторизация успешна.")
-        print("Токен:", current_token)
+        session_token = create_session_token(current_token) 
+        print(f"Технический токен: {current_token[:20]}...")
+        print(f"Сессионный токен: {session_token[:30]}...")
     else:
         handle_error(response)
 
 
 def protected_request():
-    global current_token
+    global session_token
     
-    if not current_token:
+    if not session_token:
         print("Сначала выполните авторизацию или регистрацию!")
         return
     
-    print("\n=== Защищенный запрос ===")
+    print("\nЗащищенный запрос (вариант 4 подписи)")
     try:
         user_id = int(input("ID пользователя: "))
     except ValueError:
@@ -154,7 +175,7 @@ def protected_request():
     headers = signature_variant_1(current_token)
     
     try:
-        response = make_request_with_retry(user_id, params)
+        response = make_request(user_id, params)
     except requests.exceptions.RequestException as e:
         print("Ошибка подключения:", e)
         return
@@ -179,7 +200,9 @@ def main_menu():
         print("0 - Выход")
 
         if current_token:
-            print(f"Текущий токен: {current_token[:20]}...")
+            print(f"Технический токен: {current_token[:20]}...")
+        if session_token:
+            print(f"Сессионный токен: {session_token[:30]}...")
 
         choice = input("Ваш выбор: ")
 

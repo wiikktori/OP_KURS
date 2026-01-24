@@ -27,16 +27,26 @@ class AuthResponse(BaseModel):
     login: str
     token: str
 
-# Вариант 3
-def signature_variant_3(request: Request):
+# Вариант 4
+def signature_variant_4(request: Request):
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         raise HTTPException(status_code=401, detail="Отсутствует заголовок Authorization")
     
     if ":" not in auth_header:
-        raise HTTPException(status_code=401, detail="Неверный формат подписи")
+        raise HTTPException(status_code=401, detail="Неверный формат подписи вариант 4")
 
-    signature_hash = auth_header.strip()
+    signature_hash, sent_timestamp = auth_header.split(":", 1)
+
+    try:
+        sent_time = int(sent_timestamp)
+        current_time = int(time.time())
+        
+        if abs(current_time - sent_time) > 300:
+            raise HTTPException(status_code=401, detail="Время подписи устарело")
+            
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Неверный формат времени")
     
     query_params = {}
     if request.query_params:
@@ -56,9 +66,17 @@ def signature_variant_3(request: Request):
                     data = json.load(f)
                     user_token = data.get("token")
                     if user_token:
-                        # Проверяем хэш
-                        expected_hash = hashlib.sha256(f"{user_token}{params_str}".encode()).hexdigest()
-                        if expected_hash == signature_hash:
+                        current_time = int(time.time())
+                        for hours_ago in range(0, 25):  # 0-24 часа назад
+                            timestamp = current_time - (hours_ago * 3600)
+                            
+                            possible_session_token = f"session_{hashlib.sha256(f'{user_token}:{timestamp}'.encode()).hexdigest()}"
+                            expected_hash = hashlib.sha256(
+                                f"{possible_session_token}{params_str}{sent_timestamp}".encode()
+                            ).hexdigest()
+                            
+                            if expected_hash == signature_hash:
+                                return True
                             return True  
             except json.JSONDecodeError:
                 continue
@@ -115,7 +133,7 @@ def auth_user(params: AuthUser):
 
 @app.get("/users/{user_id}")
 def user_read(user_id: int, q: Union[int, None] = 0, a: Union[int, None] = 0, request: Request = None):
-    signature_variant_3(request)
+    signature_variant_4(request)
     
     sum = q + a
     return {"user_id": user_id, "q": q, "a": a, "sum": sum} 
