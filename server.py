@@ -218,3 +218,119 @@ def get_all_texts(request: Request):
         "texts_count": len(user_texts),
         "texts": user_texts
     }
+
+@app.get("/texts/{text_id}") # просмотр конкретного текста
+def get_text(text_id: int, request: Request):
+
+    user_data = signature_variant_4(request)
+    
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+    
+    user_id = user_data.get("id")
+    
+    text_files = []
+    if os.path.exists("user_texts"):
+        for file in os.listdir("user_texts"):
+            if file.startswith(f"text_{user_id}_") and file.endswith(".txt"):
+                try:
+                    file_text_id = int(file.split("_")[2].split(".")[0])
+                    if file_text_id == text_id:
+                        text_files.append(file)
+                except:
+                    continue
+    
+    if not text_files:
+        raise HTTPException(status_code=404, detail="Текст не найден")
+    
+    text_file = text_files[0]
+    try:
+        with open(f"user_texts/{text_file}", "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка чтения текста: {str(e)}")
+    
+    return {
+        "text_id": text_id,
+        "content": content,
+        "filename": text_file
+    }
+
+@app.delete("/texts/{text_id}") # удаление текста
+def delete_text(text_id: int, request: Request):
+
+    user_data = signature_variant_4(request)
+    
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+    
+    user_id = user_data.get("id")
+    
+    text_files = []
+    if os.path.exists("user_texts"):
+        for file in os.listdir("user_texts"):
+            if file.startswith(f"text_{user_id}_") and file.endswith(".txt"):
+                try:
+                    file_text_id = int(file.split("_")[2].split(".")[0])
+                    if file_text_id == text_id:
+                        text_files.append(file)
+                except:
+                    continue
+    
+    if not text_files:
+        raise HTTPException(status_code=404, detail="Текст не найден")
+    
+    text_file = text_files[0]
+    file_path = f"user_texts/{text_file}"
+    
+    try:
+        os.remove(file_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка удаления текста: {str(e)}")
+    
+    return {
+        "message": "Текст успешно удален",
+        "text_id": text_id,
+        "filename": text_file
+    }
+
+@app.patch("/texts/{text_id}") # изменение текста
+def update_text(text_id: int, text_request: TextRequest, request: Request):
+
+    user_data = signature_variant_4(request)
+    
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+    
+    user_id = user_data.get("id")
+    
+    if not text_request.text or not text_request.text.strip():
+        raise HTTPException(status_code=400, detail="Текст не может быть пустым")
+    
+    text_files = []
+    if os.path.exists("user_texts"):
+        for file in os.listdir("user_texts"):
+            if file.startswith(f"text_{user_id}_") and file.endswith(".txt"):
+                try:
+                    file_text_id = int(file.split("_")[2].split(".")[0])
+                    if file_text_id == text_id:
+                        text_files.append(file)
+                except:
+                    continue
+    
+    if not text_files:
+        raise HTTPException(status_code=404, detail="Текст не найден")
+    
+    text_file = text_files[0]
+    
+    try:
+        with open(f"user_texts/{text_file}", "w", encoding="utf-8") as f:
+            f.write(text_request.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка изменения текста: {str(e)}")
+    
+    return {
+        "message": "Текст успешно изменен",
+        "text_id": text_id,
+        "filename": text_file
+    }

@@ -265,6 +265,142 @@ def view_all_texts(): # просмотр всех текстов
         handle_error(response)
         return False
 
+def view_text(): # просмотр конкретного текста
+    global session_token
+    
+    if not session_token:
+        print("Сначала выполните авторизацию или регистрацию!")
+        return
+    
+    print("\n=== Просмотр текста ===")
+    
+    try:
+        text_id = int(input("Введите ID текста: "))
+    except ValueError:
+        print("Некорректный ID текста")
+        return
+    
+    headers = signature_variant_4(session_token, {})
+    
+    try:
+        response = requests.get(
+            f"{API_URL}/texts/{text_id}",
+            headers=headers
+        )
+    except requests.exceptions.RequestException as e:
+        print("Ошибка подключения:", e)
+        return
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"\nТекст (ID: {data['text_id']}, Файл: {data['filename']}):")
+        print("=" * 60)
+        print(data['content'])
+        print("=" * 60)
+        return True
+    elif response.status_code == 404:
+        print("\nТекст не найден")
+        return False
+    else:
+        handle_error(response)
+        return False
+
+def delete_text(): # удаление текста
+    global session_token
+    
+    if not session_token:
+        print("Сначала выполните авторизацию или регистрацию!")
+        return
+    
+    print("\n=== Удаление текста ===")
+    
+    try:
+        text_id = int(input("Введите ID текста для удаления: "))
+    except ValueError:
+        print("Некорректный ID текста")
+        return
+    
+    # gодтверждение удаления
+    confirm = input(f"Вы уверены, что хотите удалить текст с ID {text_id}? (да/нет): ").lower()
+    if confirm != 'да':
+        print("Удаление отменено.")
+        return
+    
+    headers = signature_variant_4(session_token, {})
+    
+    try:
+        response = requests.delete(
+            f"{API_URL}/texts/{text_id}",
+            headers=headers
+        )
+    except requests.exceptions.RequestException as e:
+        print("Ошибка подключения:", e)
+        return
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"\n{data['message']}")
+        print(f"ID текста: {data['text_id']}")
+        print(f"Удаленный файл: {data['filename']}")
+        return True
+    elif response.status_code == 404:
+        print("\nТекст не найден")
+        return False
+    else:
+        handle_error(response)
+        return False
+
+def update_text(): # изменение текста
+    global session_token
+    
+    if not session_token:
+        print("Сначала выполните авторизацию или регистрацию!")
+        return
+    
+    print("\n=== Изменение текста ===")
+    
+    try:
+        text_id = int(input("Введите номер текста для изменения: "))
+    except ValueError:
+        print("Некорректный номер текста")
+        return
+    
+    print("\nВведите новый текст:")
+    text = input()
+    
+    if not text.strip():
+        print("Ошибка: текст не может быть пустым!")
+        return
+    
+    text_data = {
+        "text": text
+    }
+    
+    headers = signature_variant_4(session_token, text_data)
+    
+    try:
+        response = requests.patch(
+            f"{API_URL}/texts/{text_id}",
+            json=text_data,
+            headers=headers
+        )
+    except requests.exceptions.RequestException as e:
+        print("Ошибка подключения:", e)
+        return
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"\n{data['message']}")
+        print(f"№ текста: {data['text_id']}")
+        print(f"Файл: {data['filename']}")
+        return True
+    elif response.status_code == 404:
+        print("\nТекст не найден")
+        return False
+    else:
+        handle_error(response)
+        return False
+
 def main_menu():
     while True:
         print("\n=== Главное меню ===")
