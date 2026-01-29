@@ -30,6 +30,16 @@ class AuthResponse(BaseModel):
 class TextRequest(BaseModel):
     text: str
 
+class CipherRequest(BaseModel):
+    token: str
+    text: str
+    key: str
+
+class OneTextRequest(BaseModel):
+    token: str
+    text_number: int
+    type: str  # 'user_text', 'encrypted_text', 'decrypted_text'
+
 # Вариант 4
 def signature_variant_4(request: Request):
     auth_header = request.headers.get("Authorization")
@@ -85,6 +95,73 @@ def signature_variant_4(request: Request):
                 continue
     
     raise HTTPException(status_code=401, detail="Неверная подпись")
+
+def token_search(token: str):
+    os.makedirs("users", exist_ok=True)
+    for file in os.listdir("users"):
+        if file.endswith(".json"):
+            try:
+                with open(f"users/{file}", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if data.get("token") == token:
+                        return data.get("id"), data.get("login")
+            except json.JSONDecodeError:
+                continue
+    return None, None
+ 
+def gronsfeld_encrypt(text: str, key: List[int]) -> str: # функции шифрования 
+    if not all(isinstance(k, int) and k >= 0 for k in key):
+        raise HTTPException(status_code=400, detail="Ключ должен содержать только неотрицательные целые числа")
+    
+    alphabets = [
+        'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+        'абвгдеёжзийклмнопрстуфхцчшщъыьэюя',  
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 
+        'abcdefghijklmnopqrstuvwxyz', 
+    ]
+    
+    key_len = len(key)
+    result = []
+    
+    for i, char in enumerate(text):
+        for alphabet in alphabets:
+            if char in alphabet:
+                shift = key[i % key_len]
+                index_char = alphabet.index(char)
+                new_char = alphabet[(index_char + shift) % len(alphabet)]
+                result.append(new_char)
+                break
+        else:
+            result.append(char)
+
+    return ''.join(result)
+
+def gronsfeld_decrypt(text: str, key: List[int]) -> str: # функции дешифрования
+    if not all(isinstance(k, int) and k >= 0 for k in key):
+        raise HTTPException(status_code=400, detail="Ключ должен содержать только неотрицательные целые числа")
+    
+    alphabets = [
+        'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ', 
+        'абвгдеёжзийклмнопрстуфхцчшщъыьэюя',  
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        'abcdefghijklmnopqrstuvwxyz', 
+    ]
+    
+    key_len = len(key)
+    result = []
+    
+    for i, char in enumerate(text):
+        for alphabet in alphabets:
+            if char in alphabet:
+                shift = key[i % key_len]
+                index_char = alphabet.index(char)
+                new_char = alphabet[(index_char - shift) % len(alphabet)]
+                result.append(new_char)
+                break
+        else:
+            result.append(char)
+
+    return ''.join(result)
 
 @app.post("/users/regist")
 def create_user(user: User):
@@ -334,3 +411,190 @@ def update_text(text_id: int, text_request: TextRequest, request: Request):
         "text_id": text_id,
         "filename": text_file
     }
+
+@app.post("/cipher_encrypt") # функция шифрования текста
+def encrypt(data: CipherRequest):
+    user_id, user_login = token_search(data.token)
+    
+    if user_id is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    if not data.text.strip():
+        user_folder = f"user_texts/{user_id}"
+        if not os.path.exists(user_folder) or not os.listdir(user_folder):
+            raise HTTPException(status_code=404, detail="Нет доступных текстов для пользователя")
+        
+        text_files = [f for f in os.listdir(user_folder) if f.endswith(".txt")]
+        text_files.sort(reverse=True)
+        last_text_file = text_files[0]
+        file_path = f"{user_folder}/{last_text_file}"
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data.text = f.read()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка чтения текста: {str(e)}")
+    
+    try:
+        key_list = [int(digit) for digit in data.key]
+        encrypted_text = gronsfeld_encrypt(data.text, key_list)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка шифрования: {str(e)}")
+    
+    user_folder = f"encrypted_texts/{user_id}"
+    os.makedirs(user_folder, exist_ok=True)
+    
+    text_id = int(time.time())
+    file_path = f"{user_folder}/text_{text_id}.txt"
+    
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(encrypted_text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка сохранения зашифрованного текста: {str(e)}")
+    
+    return {"message": encrypted_text}
+
+@app.post("/cipher_decrypt") # функция дешифрования текста
+def decrypt(data: CipherRequest):
+    user_id, user_login = token_search(data.token)
+    
+    if user_id is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    if not data.text.strip():
+        user_folder = f"encrypted_texts/{user_id}"
+        if not os.path.exists(user_folder) or not os.listdir(user_folder):
+            raise HTTPException(status_code=404, detail="Нет доступных зашифрованных текстов")
+        
+        text_files = [f for f in os.listdir(user_folder) if f.endswith(".txt")]
+        text_files.sort(reverse=True)
+        last_text_file = text_files[0]
+        file_path = f"{user_folder}/{last_text_file}"
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data.text = f.read()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка чтения зашифрованного текста: {str(e)}")
+    
+    try:
+        key_list = [int(digit) for digit in data.key]
+        decrypted_text = gronsfeld_decrypt(data.text, key_list)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка дешифрования: {str(e)}")
+    
+    user_folder = f"decrypted_texts/{user_id}"
+    os.makedirs(user_folder, exist_ok=True)
+    
+    text_id = int(time.time())
+    file_path = f"{user_folder}/text_{text_id}.txt"
+    
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(decrypted_text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка сохранения расшифрованного текста: {str(e)}")
+    
+    return {"message": decrypted_text}
+
+@app.get("/view_encrypted_texts") # просмотр зашифрованных текстов 
+def view_encrypted_text(token: str):
+    user_id, user_login = token_search(token)
+    
+    if user_id is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    user_folder = f"encrypted_texts/{user_id}"
+    os.makedirs(user_folder, exist_ok=True)
+    
+    if not os.path.exists(user_folder) or not os.listdir(user_folder):
+        return {"message": "У вас нет зашифрованных текстов."}
+    
+    encrypted_texts = []
+    for filename in os.listdir(user_folder):
+        if filename.endswith(".txt"):
+            filepath = os.path.join(user_folder, filename)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    encrypted_texts.append({
+                        "filename": filename,
+                        "content": content[:100] + "..." if len(content) > 100 else content,
+                        "full_length": len(content)
+                    })
+            except Exception:
+                continue
+    
+    return {"texts": encrypted_texts}
+
+@app.get("/view_decrypted_texts") # просмотр расшифрованных текстов 
+def view_decrypted_text(token: str):
+    user_id, user_login = token_search(token)
+    
+    if user_id is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    user_folder = f"decrypted_texts/{user_id}"
+    os.makedirs(user_folder, exist_ok=True)
+    
+    if not os.path.exists(user_folder) or not os.listdir(user_folder):
+        return {"message": "У вас нет расшифрованных текстов."}
+    
+    decrypted_texts = []
+    for filename in os.listdir(user_folder):
+        if filename.endswith(".txt"):
+            filepath = os.path.join(user_folder, filename)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    decrypted_texts.append({
+                        "filename": filename,
+                        "content": content[:100] + "..." if len(content) > 100 else content,
+                        "full_length": len(content)
+                    })
+            except Exception:
+                continue
+    
+    return {"texts": decrypted_texts}
+
+@app.post("/view_one_text") # просмотр одного текста пользователя
+def view_one_text(text: OneTextRequest):
+    user_id, user_login = token_search(text.token)
+    
+    if user_id is None:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    if text.type == "user_text":
+        base_dir = "user_texts"
+    elif text.type == "encrypted_text":
+        base_dir = "encrypted_texts"
+    elif text.type == "decrypted_text":
+        base_dir = "decrypted_texts"
+    else:
+        raise HTTPException(status_code=400, detail="Неверный тип текста")
+    
+    user_folder = f"{base_dir}/{user_id}"
+    
+    if not os.path.exists(user_folder):
+        raise HTTPException(status_code=404, detail="Нет текстов для пользователя")
+    
+    text_files = [f for f in os.listdir(user_folder) if f.endswith(".txt")]
+    text_files.sort(reverse=True)
+    
+    if not text_files:
+        return {"message": f"У вас нет текстов типа '{text.type}'."}
+    
+    if text.text_number < 1 or text.text_number > len(text_files):
+        raise HTTPException(status_code=400, detail=f"Выберите номер от 1 до {len(text_files)}")
+    
+    selected_file = text_files[text.text_number - 1]
+    file_path = os.path.join(user_folder, selected_file)
+    
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка чтения файла: {str(e)}")
+    
+    return {"text": content, "filename": selected_file}
