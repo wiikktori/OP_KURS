@@ -27,6 +27,9 @@ class AuthResponse(BaseModel):
     login: str
     token: str
 
+class TextRequest(BaseModel):
+    text: str
+
 # Вариант 4
 def signature_variant_4(request: Request):
     auth_header = request.headers.get("Authorization")
@@ -133,10 +136,85 @@ def auth_user(params: AuthUser):
 
 @app.get("/users/{user_id}")
 def user_read(user_id: int, q: Union[int, None] = 0, a: Union[int, None] = 0, request: Request = None):
-    signature_variant_4(request)
+    user_data = signature_variant_4(request)
+    
+    if user_data.get("id") != user_id:
+        raise HTTPException(status_code=403, detail="Доступ запрещен")
     
     sum = q + a
-    return {"user_id": user_id, "q": q, "a": a, "sum": sum} 
+    return {"user_id": user_id, "q": q, "a": a, "sum": sum}
+
+@app.post("/texts/add") #добавление текста
+def add_text(text_request: TextRequest, request: Request):
+ 
+    user_data = signature_variant_4(request)
+    
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+    
+    user_id = user_data.get("id")
+    
+    if not text_request.text or not text_request.text.strip():
+        raise HTTPException(status_code=400, detail="Текст не может быть пустым")
+    
+    os.makedirs("user_texts", exist_ok=True)
+
+    text_id = int(time.time())
+   
+    text_file = f"user_texts/text_{user_id}_{text_id}.txt"
+    try:
+        with open(text_file, "w", encoding="utf-8") as f:
+            f.write(text_request.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка сохранения текста: {str(e)}")
+    
+    return {
+        "message": "Текст успешно добавлен",
+        "text_id": text_id
+    }
 
 
+@app.get("/texts") # просмотр всех текстов
+def get_all_texts(request: Request):
 
+    user_data = signature_variant_4(request)
+    
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+    
+    user_id = user_data.get("id")
+    
+    user_texts = []
+    
+    if os.path.exists("user_texts"):
+        for file in os.listdir("user_texts"):
+            if file.startswith(f"text_{user_id}_") and file.endswith(".txt"):
+                try:
+                    file_text_id = int(file.split("_")[2].split(".")[0])
+                    try:
+                        with open(f"user_texts/{file}", "r", encoding="utf-8") as f:
+                            content = f.read()
+                            preview = content[:100] + "..." if len(content) > 100 else content
+                            user_texts.append({
+                                "text_id": file_text_id,
+                                "filename": file,
+                                "preview": preview,
+                                "full_length": len(content)
+                            })
+                    except:
+                        user_texts.append({
+                            "text_id": file_text_id,
+                            "filename": file,
+                            "preview": "Ошибка чтения файла",
+                            "full_length": 0
+                        })
+                except:
+                    continue
+    
+    user_texts.sort(key=lambda x: x["text_id"], reverse=True)
+    
+    return {
+        "user_id": user_id,
+        "texts_count": len(user_texts),
+        "texts": user_texts
+    }

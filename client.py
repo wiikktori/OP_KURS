@@ -190,6 +190,80 @@ def protected_request():
     else:
         handle_error(response)
 
+def add_text(): #добавление текста
+    global session_token
+    
+    if not session_token:
+        print("Сначала выполните авторизацию или регистрацию!")
+        return
+    
+    print("\n=== Добавление текста ===")
+    
+    text = input("Введите текст: ")
+    
+    if not text.strip():
+        print("Ошибка: текст не может быть пустым!")
+        return
+    
+    text_data = {
+        "text": text
+    }
+    
+    headers = signature_variant_4(session_token, text_data)
+    
+    try:
+        response = requests.post(
+            f"{API_URL}/texts/add",
+            json=text_data,
+            headers=headers
+        )
+    except requests.exceptions.RequestException as e:
+        print("Ошибка подключения:", e)
+        return
+    
+    if response.status_code == 200:
+        data = response.json()
+        print(f"\n{data['message']}")
+        print(f"№ текста: {data['text_id']}")
+        return True
+    else:
+        handle_error(response)
+        return False
+    
+def view_all_texts(): # просмотр всех текстов
+    global session_token
+    
+    if not session_token:
+        print("Сначала выполните авторизацию или регистрацию!")
+        return
+    
+    print("\n=== Просмотр всех текстов ===")
+    
+    headers = signature_variant_4(session_token, {})
+    
+    try:
+        response = requests.get(
+            f"{API_URL}/texts",
+            headers=headers
+        )
+    except requests.exceptions.RequestException as e:
+        print("Ошибка подключения:", e)
+        return
+    
+    if response.status_code == 200:
+        data = response.json()
+        
+        if data["texts_count"] == 0:
+            print("\n У вас пока нет сохраненных текстов")
+            return True
+        
+        print(f"\n Найдено текстов: {data['texts_count']}")
+        print("=" * 70)
+        
+        return True
+    else:
+        handle_error(response)
+        return False
 
 def main_menu():
     while True:
