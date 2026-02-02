@@ -1,0 +1,72 @@
+[
+  {
+    "timestamp": "2026-02-01T01:44:11.464509",
+    "endpoint": "/register",
+    "method": "POST",
+    "data": {
+      "login": "wiikktorii",
+      "email": "vika@gmail.com"
+    },
+    "result": {
+      "status": "success",
+      "token_created": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:52:14.224949",
+    "endpoint": "/cipher_encrypt",
+    "method": "POST",
+    "data": {
+      "key": [
+        1,
+        2,
+        3
+      ],
+      "original_length": 6
+    },
+    "result": {
+      "status": "success",
+      "encrypted_length": 6,
+      "text_id": 1769885534
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:54:33.652651",
+    "endpoint": "/cipher_decrypt",
+    "method": "POST",
+    "data": {
+      "key": [
+        1,
+        2,
+        3
+      ],
+      "encrypted_length": 6
+    },
+    "result": {
+      "status": "success",
+      "decrypted_length": 6,
+      "text_id": 1769885673
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:57:57.694953",
+    "endpoint": "/change_password",
+    "method": "PATCH",
+    "data": {
+      "password_changed": true
+    },
+    "result": {
+      "status": "success",
+      "new_token_created": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T02:04:01.945331",
+    "endpoint": "/query_history",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "history_entries": 4
+    }
+  }
+]

@@ -1,0 +1,113 @@
+[
+  {
+    "timestamp": "2026-02-01T01:12:56.465932",
+    "endpoint": "/register",
+    "method": "POST",
+    "data": {
+      "login": "TestUser1233",
+      "email": "testuser123@example.com"
+    },
+    "result": {
+      "status": "success",
+      "token_created": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:12:56.486994",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "TestUser1233"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:12:56.509403",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "TestUser1233"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:12:56.531358",
+    "endpoint": "/cipher_encrypt",
+    "method": "POST",
+    "data": {
+      "key": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "original_length": 24
+    },
+    "result": {
+      "status": "success",
+      "encrypted_length": 24,
+      "text_id": 1769883176
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:12:56.556232",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "TestUser1233"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:12:56.574040",
+    "endpoint": "/cipher_decrypt",
+    "method": "POST",
+    "data": {
+      "key": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "encrypted_length": 24
+    },
+    "result": {
+      "status": "success",
+      "decrypted_length": 24,
+      "text_id": 1769883176
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:12:56.605838",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "TestUser1233"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T01:12:56.623303",
+    "endpoint": "/change_password",
+    "method": "PATCH",
+    "data": {
+      "password_changed": true
+    },
+    "result": {
+      "status": "success",
+      "new_token_created": true
+    }
+  }
+]

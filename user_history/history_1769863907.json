@@ -1,0 +1,318 @@
+[
+  {
+    "timestamp": "2026-01-31T20:50:27.986482",
+    "endpoint": "/delete_query_history",
+    "method": "DELETE",
+    "data": {
+      "action": "clear_history"
+    },
+    "result": {
+      "status": "success",
+      "history_cleared": true
+    }
+  },
+  {
+    "timestamp": "2026-01-31T20:50:33.816542",
+    "endpoint": "/view_all_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 3
+    }
+  },
+  {
+    "timestamp": "2026-01-31T20:50:41.495290",
+    "endpoint": "/view_encrypted_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 3
+    }
+  },
+  {
+    "timestamp": "2026-01-31T20:50:47.870879",
+    "endpoint": "/view_decrypted_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-01-31T20:51:03.978414",
+    "endpoint": "/query_history",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "history_entries": 4
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:29:22.063771",
+    "endpoint": "/exit",
+    "method": "DELETE",
+    "data": {},
+    "result": {
+      "status": "exit"
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:29:44.613218",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "wika"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:31:48.768912",
+    "endpoint": "/exit",
+    "method": "DELETE",
+    "data": {},
+    "result": {
+      "status": "exit"
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:32:08.102062",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "wika"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:32:33.278445",
+    "endpoint": "/exit",
+    "method": "DELETE",
+    "data": {},
+    "result": {
+      "status": "exit"
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:32:49.326814",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "wika"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:33:21.576700",
+    "endpoint": "/add_text",
+    "method": "POST",
+    "data": {
+      "text_length": 7
+    },
+    "result": {
+      "status": "success",
+      "text_id": 1769870001
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:40:18.537020",
+    "endpoint": "/exit",
+    "method": "DELETE",
+    "data": {},
+    "result": {
+      "status": "exit"
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:40:40.940451",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "wika"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:40:58.636970",
+    "endpoint": "/add_text",
+    "method": "POST",
+    "data": {
+      "text_length": 3
+    },
+    "result": {
+      "status": "success",
+      "text_id": 1769870458
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:41:11.712499",
+    "endpoint": "/view_all_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 5
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:41:29.992814",
+    "endpoint": "/view_all_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 5
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:41:33.691832",
+    "endpoint": "/view_one_text",
+    "method": "GET",
+    "data": {
+      "type": "user_text",
+      "text_number": 1
+    },
+    "result": {
+      "status": "success",
+      "filename": "text_1769870458.txt",
+      "length": 3
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:41:37.527046",
+    "endpoint": "/cipher_encrypt",
+    "method": "POST",
+    "data": {
+      "key": [
+        1,
+        2
+      ],
+      "original_length": 3
+    },
+    "result": {
+      "status": "success",
+      "encrypted_length": 3,
+      "text_id": 1769870497
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:41:51.339544",
+    "endpoint": "/view_encrypted_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 4
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:41:56.237774",
+    "endpoint": "/view_one_text",
+    "method": "GET",
+    "data": {
+      "type": "encrypted_text",
+      "text_number": 1
+    },
+    "result": {
+      "status": "success",
+      "filename": "text_1769870497.txt",
+      "length": 3
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:42:09.807463",
+    "endpoint": "/cipher_decrypt",
+    "method": "POST",
+    "data": {
+      "key": [
+        1,
+        2
+      ],
+      "encrypted_length": 3
+    },
+    "result": {
+      "status": "success",
+      "decrypted_length": 3,
+      "text_id": 1769870529
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:42:17.112784",
+    "endpoint": "/view_encrypted_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 4
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:42:20.993924",
+    "endpoint": "/view_decrypted_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 3
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:42:35.464031",
+    "endpoint": "/view_all_texts",
+    "method": "GET",
+    "data": {},
+    "result": {
+      "texts_count": 5
+    }
+  },
+  {
+    "timestamp": "2026-01-31T21:42:42.412884",
+    "endpoint": "/view_one_text",
+    "method": "GET",
+    "data": {
+      "type": "user_text",
+      "text_number": 1
+    },
+    "result": {
+      "status": "success",
+      "filename": "text_1769870458.txt",
+      "length": 3
+    }
+  },
+  {
+    "timestamp": "2026-02-01T00:18:14.705288",
+    "endpoint": "/exit",
+    "method": "DELETE",
+    "data": {},
+    "result": {
+      "status": "exit"
+    }
+  },
+  {
+    "timestamp": "2026-02-01T00:20:15.796695",
+    "endpoint": "/auth",
+    "method": "POST",
+    "data": {
+      "login": "wika"
+    },
+    "result": {
+      "status": "success",
+      "auth": true
+    }
+  },
+  {
+    "timestamp": "2026-02-01T00:20:59.305307",
+    "endpoint": "/exit",
+    "method": "DELETE",
+    "data": {},
+    "result": {
+      "status": "exit"
+    }
+  }
+]
